@@ -815,6 +815,18 @@ select { appearance: none; cursor: pointer; }
 }
 .inlinebtn:hover { border-color: var(--ember); color: var(--ember-text); }
 
+/* The amount is the number the whole Send screen is about — give it the weight of
+   a figure being entered, not a field being filled: large, centered, tabular. */
+.send-amount {
+  text-align: center;
+  font-size: clamp(26px, 8vw, 38px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  padding: 14px 14px;
+}
+.send-amount::placeholder { font-weight: 600; opacity: 0.4; }
+
 /* Label row with a trailing text action (e.g. "Amount" + a Max button). Carries
    the label's normal top spacing so the inline label can zero its own margin. */
 .amthead {

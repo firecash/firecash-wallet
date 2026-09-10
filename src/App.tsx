@@ -3443,7 +3443,7 @@ function Onboard({
     <div className="card center">
       <h2>Welcome</h2>
       <p className="muted" style={{ marginTop: 0 }}>
-        Create a new wallet or restore yours. Every ZKAS payment is private.
+        Create a new wallet, or bring an existing one to this device. Every ZKAS payment is private.
       </p>
       <SyncDestination />
       {error && <div className="msg err">{error}</div>}
@@ -3453,25 +3453,22 @@ function Onboard({
       <button className="btn" disabled={busy || !status?.daa_score} onClick={create}>
         {busy ? <span className="spin" /> : status?.daa_score ? "Create new wallet" : "Connecting…"}
       </button>
-      {/* Desktop keeps backups in a known folder, so restoring is a pick from a
-          list rather than hunting for a file — the reason to write backups at all. */}
-      {isDesktop() && (
-        <button className="btn ghost" onClick={() => setMode("backup")}>
-          Restore from backup file
-        </button>
-      )}
-      {!isDesktop() && (
-        <button className="btn ghost" onClick={() => setMode("restorefile")}>
-          Restore from backup file
-        </button>
-      )}
-      <button className="btn ghost" onClick={() => setMode("import")}>
-        Import from seed
+      {/* The three ways to bring an EXISTING wallet, grouped under one heading and
+          demoted to secondary — so the primary decision (create) stands alone, and
+          "restore" is one button, not two identical ones split by platform. */}
+      <div className="settings-section" style={{ textAlign: "center", margin: "20px 0 6px" }}>
+        Already have a wallet?
+      </div>
+      <button className="btn ghost" onClick={() => setMode(isDesktop() ? "backup" : "restorefile")}>
+        Restore from a backup file
       </button>
-      {/* Watching needs no key of your own, so it is the one option here that
-          never creates something to lose. */}
+      <button className="btn ghost" onClick={() => setMode("import")}>
+        Import a recovery phrase
+      </button>
+      {/* Watching needs no key of your own — the one option that never creates
+          something to lose. */}
       <button className="btn ghost" onClick={() => setMode("watch")}>
-        Watch a wallet (view only)
+        Watch a wallet (view-only)
       </button>
     </div>
   );
@@ -3706,12 +3703,12 @@ function TxDetail({
             </button>
           )}
           {row.recipient && !contact && (
-            <button className="btn ghost small" onClick={() => setSaving(true)}>
+            <button className={"btn small" + (row.kind === "sent" ? " ghost" : "")} onClick={() => setSaving(true)}>
               Save as contact
             </button>
           )}
           {row.recipient && row.kind === "sent" && onSendAgain && (
-            <button className="btn ghost small" onClick={() => onSendAgain(row.recipient!)}>
+            <button className="btn small" onClick={() => onSendAgain(row.recipient!)}>
               Send again
             </button>
           )}
@@ -5284,6 +5281,7 @@ function Send({
         </button>
       </div>
       <input
+        className="send-amount"
         value={amount}
         onChange={(e) => setAmount(sanitizeAmountInput(e.target.value))}
         placeholder="0.00"
