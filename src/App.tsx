@@ -20,6 +20,7 @@ import {
 import { ensureSigner, fvkHex, generateMnemonicWallet, accountSeedHex, signLocal, verifyLocal, addressFromSeed, type Network } from "./signer";
 import { consolidateNonCustodial, FragmentedWalletError, sendNonCustodial, PartialSendError, MAX_CONSOLIDATION_ROUNDS, MAX_NOTES_PER_TX, MIN_NOTES_PER_MERGE, type SendPart, type SendStage, type SendProgress } from "./noncustodial";
 import { walletStatus, walletCanSpend } from "./status";
+import { useZkasPrice, fmtFiat } from "./price";
 import { arrivalAmount, ownActivityExplainsRise, quietUntil } from "./arrivals";
 import { useMaintenance } from "./useMaintenance";
 import { isMaintenanceEnabled, setMaintenanceEnabled } from "./maintenance";
@@ -2399,6 +2400,7 @@ function BalanceHero({ status, txs }: { status: Status; txs: LocalTx[] }) {
   // only on some renders, and the moment "restoring" flips off React throws
   // #310 (more hooks than the previous render) and takes the whole UI down.
   const animBal = useCountUp(shownBal);
+  const price = useZkasPrice();
   if (rebuilding) {
     return (
       <div className="card balance">
@@ -2467,6 +2469,7 @@ function BalanceHero({ status, txs }: { status: Status; txs: LocalTx[] }) {
         {trimFc(animBal.toFixed(8))}
         <span className="unit"> ZKAS</span>
       </div>
+      {fmtFiat(shownBal, price) && <div className="balance-fiat">≈ {fmtFiat(shownBal, price)}</div>}
       {/* Fixed height, deliberately. This line's content changes as the wallet
           works — "Ready" one second, "Setting up 44% · about 5 minutes left" the
           next — and with height driven by content the whole card grew and shrank
@@ -3617,6 +3620,7 @@ function TxDetail({
   const [copied, setCopied] = useState("");
   const [label, setLabel] = useState(() => getTxLabel(row.txid));
   const [labelState, setLabelState] = useState("");
+  const price = useZkasPrice();
   const contact = findContact(row.recipient);
   const isConsolidation = isConsolidationRow(row);
   const kind = isConsolidation ? "Consolidation" : row.kind === "coinbase" ? "Mined" : row.kind === "received" ? "Received" : "Sent";
@@ -3630,10 +3634,13 @@ function TxDetail({
     <div className="modalwrap" onClick={onClose}>
       <div className="card modalcard wide" onClick={(e) => e.stopPropagation()}>
         <h2 style={{ marginTop: 0 }}>{kind}</h2>
-        <div className="amt" style={{ fontSize: 30, marginBottom: 10 }}>
+        <div className="amt" style={{ fontSize: 30, marginBottom: fmtFiat(row.amountZkas, price) ? 2 : 10 }}>
           {sign} {trimFc(row.amountZkas.toFixed(8))}
           <span className="unit"> ZKAS</span>
         </div>
+        {fmtFiat(row.amountZkas, price) && (
+          <div className="muted small" style={{ marginBottom: 10 }}>≈ {fmtFiat(row.amountZkas, price)}</div>
+        )}
 
         {row.memo && (
           <div className="msg small" style={{ background: "transparent", border: "1px solid var(--border)" }}>
@@ -4854,6 +4861,7 @@ function Send({
   outflow: number;
 }) {
   const toast = useToast();
+  const price = useZkasPrice();
   const initialRequest = prefillTo ? parsePaymentUri(prefillTo) : null;
   const [to, setTo] = useState(initialRequest?.address ?? "");
   const [amount, setAmount] = useState(initialRequest?.amount ?? "");
@@ -5252,7 +5260,7 @@ function Send({
     <div className="card">
       <div className="sendhead">
         <h2 style={{ margin: 0 }}>Send</h2>
-        <span className="muted small">{trimFc(spendable.toFixed(8))} spendable</span>
+        <span className="muted small">{trimFc(spendable.toFixed(8))} spendable{fmtFiat(spendable, price) ? ` · ${fmtFiat(spendable, price)}` : ""}</span>
       </div>
 
       <label>Recipient shielded address</label>
@@ -5595,6 +5603,7 @@ function History({
   // Chain-derived history (mints, receives, and OVK-recovered sends): fetched
   // from the daemon, so it survives a seed restore and shows on every device.
   const toast = useToast();
+  const price = useZkasPrice();
   const [chain, setChain] = useState<ChainHistory | null>(null);
   const [busy, setBusy] = useState(false);
   // True from the moment history is enabled until the recovery scan finishes —
@@ -5853,7 +5862,7 @@ function History({
               return (
                 <div key={`rcpt-${r.ts}-${ri}`} className="txrow" aria-label="Received">
                   <div className="txrow-main">
-                    <span className="txrow-amt pos">+ {trimFc(r.amountFc.toFixed(8))} ZKAS</span>
+                    <span className="txrow-amt pos">+ {trimFc(r.amountFc.toFixed(8))} ZKAS{fmtFiat(r.amountFc, price) ? <span className="fiat-sub small"> · {fmtFiat(r.amountFc, price)}</span> : null}</span>
                     <span className="txrow-badge recv">received</span>
                   </div>
                   <div className="txrow-sub">
@@ -5874,7 +5883,7 @@ function History({
                   onClick={() => setDetail(localTxToRow(t))}
                 >
                   <div className="txrow-main">
-                    <span className="txrow-amt neg">− {trimFc(t.amountFc.toFixed(8))} ZKAS</span>
+                    <span className="txrow-amt neg">− {trimFc(t.amountFc.toFixed(8))} ZKAS{fmtFiat(t.amountFc, price) ? <span className="fiat-sub small"> · {fmtFiat(t.amountFc, price)}</span> : null}</span>
                     <span className={"txrow-badge " + ((t.confs ?? 0) >= 1 ? "done" : "pending")}>{confBadge(t)}</span>
                   </div>
                   <div className="txrow-sub">
@@ -5905,6 +5914,9 @@ function History({
                         the wallet is the fee, not the merged total. A normal send shows
                         the amount sent, unchanged. */}
                     {trimFc((isConsolidationRow(r) ? r.feeSompi / 1e8 : r.amountZkas).toFixed(8))} ZKAS
+                    {fmtFiat(isConsolidationRow(r) ? r.feeSompi / 1e8 : r.amountZkas, price) ? (
+                      <span className="fiat-sub small"> · {fmtFiat(isConsolidationRow(r) ? r.feeSompi / 1e8 : r.amountZkas, price)}</span>
+                    ) : null}
                   </span>
                   <span className={"txrow-badge " + (r.kind === "sent" ? "done" : "recv")}>
                     {r.kind === "coinbase"
