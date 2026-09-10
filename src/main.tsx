@@ -114,6 +114,9 @@ function AppShell() {
       : [{ path: "/settings", label: "Settings", icon: Settings }]),
   ], [android, desktop]);
   useHashRouterSync();
+  // Reset scroll on every top-level route change (Wallet ↔ Explore ↔ Services ↔
+  // Settings…) — a new screen otherwise keeps the previous one's scroll offset.
+  useEffect(() => { try { window.scrollTo(0, 0); } catch { /* SSR */ } }, [location.pathname, location.search]);
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (!(event.ctrlKey || event.metaKey) || event.altKey || event.shiftKey) return;

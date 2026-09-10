@@ -496,7 +496,10 @@ export default function App({ routeTab = null, routeSticky = false, onClearRoute
     // The "just sent" banner/highlight lives only for the History visit right
     // after the send — navigating away retires it.
     if (tab !== "history") setJustSent(null);
-    scrollToPane();
+    // Every activity starts at the top. Switching tabs used to inherit the
+    // previous pane's scroll offset — tap Settings while deep in History and land
+    // mid-page. Reset the window instead of scrolling the pane into view.
+    try { window.scrollTo({ top: 0, behavior: "auto" }); } catch { /* SSR */ }
   }, [tab]);
   // A freshly created seed, held at the top level so the 4-second status poll
   // (which flips has_wallet true) can never unmount the backup screen mid-copy.
