@@ -4449,6 +4449,65 @@ function RescanButton({ label, hint, daaScore }: { label: string; hint: string; 
   );
 }
 
+/// Request a specific amount: builds a `zkas:addr?amount=…&memo=…` payment link +
+/// QR that the payer's Send screen auto-fills (parsePaymentUri consumes it). The
+/// amount and note are a REQUEST — the payer can still change them.
+function RequestAmount({ address }: { address: string }) {
+  const [open, setOpen] = useState(false);
+  const [amount, setAmount] = useState("");
+  const [memo, setMemo] = useState("");
+  const [qr, setQr] = useState("");
+  const [copied, setCopied] = useState(false);
+  const uri = useMemo(() => {
+    const p = new URLSearchParams();
+    if (amount.trim()) p.set("amount", amount.trim());
+    if (memo.trim()) p.set("memo", memo.trim());
+    const qs = p.toString();
+    return qs ? `${address}?${qs}` : address;
+  }, [address, amount, memo]);
+  useEffect(() => {
+    if (!open || !amount.trim()) return;
+    QRCode.toDataURL(uri, { margin: 1, width: 440 }).then(setQr).catch(() => {});
+  }, [uri, open, amount]);
+  const copy = async () => {
+    await copyText(uri);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+  if (!open) {
+    return (
+      <button type="button" className="linkbtn" style={{ marginTop: 16 }} onClick={() => setOpen(true)}>
+        Request a specific amount
+      </button>
+    );
+  }
+  return (
+    <div className="request-amount">
+      <label>Amount to request</label>
+      <input value={amount} onChange={(e) => setAmount(sanitizeAmountInput(e.target.value))} placeholder="0.00" inputMode="decimal" autoFocus />
+      <label>What it's for (optional)</label>
+      <input value={memo} onChange={(e) => setMemo(e.target.value.slice(0, 400))} placeholder="Invoice 1042" maxLength={400} />
+      {qr && amount.trim() && (
+        <div className="qr" style={{ margin: "14px 0 0" }}>
+          <img src={qr} alt="payment request QR" style={{ width: 200, height: 200 }} />
+        </div>
+      )}
+      <div className="row" style={{ marginTop: 12 }}>
+        <button className={"btn copybtn" + (copied ? " copied" : "")} disabled={!amount.trim()} onClick={copy}>
+          {copied ? "Copied ✓" : "Copy payment link"}
+        </button>
+        {typeof navigator !== "undefined" && typeof navigator.share === "function" && (
+          <button className="btn ghost" disabled={!amount.trim()} onClick={() => { void navigator.share({ text: uri }).catch(() => {}); }}>
+            Share
+          </button>
+        )}
+      </div>
+      <div className="fieldhint muted">The payer's wallet fills in the amount and note — they can still change them.</div>
+      <button type="button" className="linkbtn" style={{ marginTop: 8 }} onClick={() => setOpen(false)}>Done</button>
+    </div>
+  );
+}
+
 function Receive({ status }: { status: Status }) {
   const addr = status.address || "";
   // The address QR never changes, so it's cached after the first render and shows
@@ -4501,6 +4560,8 @@ function Receive({ status }: { status: Status }) {
           </button>
         )}
       </div>
+
+      <RequestAmount address={addr} />
 
       <div className="privacy-note">
         <span className="privacy-note-mark" aria-hidden="true" />
