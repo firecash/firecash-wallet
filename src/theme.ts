@@ -102,7 +102,7 @@ function apply(t: Theme): void {
 /// teal for light mode. For teal we therefore CLEAR the inline overrides and let
 /// the stylesheet decide, rather than force one teal across both themes. Only a
 /// deliberately chosen non-default accent overrides the stylesheet.
-const ACCENT_PROPS = ["--ember", "--ember-hover", "--ember-ink", "--ember-soft", "--glow-1", "--glow-2"];
+const ACCENT_PROPS = ["--ember", "--ember-hover", "--ember-ink", "--ember-soft", "--ember-rgb", "--glow-1", "--glow-2"];
 function applyAccent(a: Accent): void {
   const s = document.documentElement.style;
   if (a === "teal") {
@@ -114,6 +114,11 @@ function applyAccent(a: Accent): void {
   s.setProperty("--ember-hover", hover);
   s.setProperty("--ember-ink", ink);
   s.setProperty("--ember-soft", hexA(base, 0.12));
+  // Raw channels ("r g b") so any tint in the stylesheet can be built from the
+  // live accent — rgb(var(--ember-rgb) / .18) — instead of a hardcoded teal.
+  // This is what makes the balance aurora, shadows, pills and glows follow the
+  // chosen accent rather than staying teal.
+  s.setProperty("--ember-rgb", rgbTriplet(base));
   s.setProperty("--glow-1", hexA(base, 0.08));
   s.setProperty("--glow-2", hexA(base, 0.05));
 }
@@ -122,4 +127,10 @@ function applyAccent(a: Accent): void {
 function hexA(hex: string, a: number): string {
   const n = parseInt(hex.slice(1), 16);
   return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
+}
+
+/// "#rrggbb" -> "r g b" (space-separated channels for rgb(... / alpha)).
+function rgbTriplet(hex: string): string {
+  const n = parseInt(hex.slice(1), 16);
+  return `${(n >> 16) & 255} ${(n >> 8) & 255} ${n & 255}`;
 }

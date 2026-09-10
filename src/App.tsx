@@ -1857,8 +1857,8 @@ function ConfirmDialog({
       <div className="card modalcard" onClick={(e) => e.stopPropagation()}>
         <h2 style={{ marginTop: 0 }}>{title}</h2>
         <p className="muted small">{body}</p>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 4 }}>
-          <button className="btn" onClick={onConfirm}>
+        <div className="dialog-actions" style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 4 }}>
+          <button className={"btn" + (danger ? " danger" : "")} onClick={onConfirm}>
             {confirmLabel}
           </button>
           <button className="btn ghost" onClick={onCancel}>

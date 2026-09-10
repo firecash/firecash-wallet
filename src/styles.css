@@ -15,6 +15,15 @@
   --ember: #17d6be;
   --ember-hover: #3ee6d1;
   --ember-soft: rgba(23, 214, 190, 0.12);
+  /* Raw accent channels. Every accent tint below is built from these as
+     rgb(var(--ember-rgb) / <a>), so choosing a non-teal accent (theme.ts sets
+     --ember-rgb to match) recolors the balance aurora, glows, shadows, pills and
+     badges too — not just the solid controls. Teal is the identity default. */
+  --ember-rgb: 23 214 190;
+  /* Accent used as FOREGROUND text/icons (links, eyebrows, badge labels). In dark
+     mode it is just the accent; the light theme darkens whatever accent is active
+     so a bright accent (violet/ice/rose) stays readable on a white ground. */
+  --ember-text: var(--ember);
   /* Text that sits ON the accent fill (buttons, active tab). Overridden per accent
      by theme.ts; this default matches the teal identity so the first paint is
      correct before the script runs. */
@@ -47,6 +56,10 @@
   --ember: #0a9d8b;
   --ember-hover: #0bb8a2;
   --ember-soft: rgba(10, 157, 139, 0.1);
+  --ember-rgb: 10 157 139;
+  /* Darken whatever accent is live (theme.ts may have set --ember to a bright
+     violet/ice/rose) toward near-black so accent text clears contrast on white. */
+  --ember-text: color-mix(in srgb, var(--ember) 58%, #05130f);
   --shadow: 0 10px 30px rgba(20, 20, 40, 0.08);
   --glow-1: rgba(10, 157, 139, 0.07);
   --glow-2: rgba(10, 157, 139, 0.04);
@@ -75,7 +88,8 @@ html, body {
   background-color: var(--bg);
   background-image:
     radial-gradient(60rem 60rem at 8% -10%, var(--glow-1), transparent 60%),
-    radial-gradient(50rem 50rem at 100% 0%, var(--glow-2), transparent 55%);
+    radial-gradient(50rem 50rem at 100% 0%, var(--glow-2), transparent 55%),
+    radial-gradient(46rem 46rem at 50% 118%, rgb(var(--ember-rgb) / 0.05), transparent 60%);
   background-attachment: fixed;
   color: var(--ink);
   font-family: var(--sans);
@@ -83,7 +97,7 @@ html, body {
   -webkit-font-smoothing: antialiased;
 }
 
-a { color: var(--ember); }
+a { color: var(--ember-text); }
 
 .wrap {
   max-width: 640px;
@@ -127,7 +141,10 @@ a { color: var(--ember); }
   overflow: hidden;
   text-align: center;
   padding: 34px 20px 30px;
-  background: linear-gradient(180deg, rgba(23, 214, 190, 0.06), transparent 62%), var(--surface);
+  background: linear-gradient(180deg, rgb(var(--ember-rgb) / 0.07), transparent 62%), var(--surface);
+  /* A hairline of the accent along the top seats the hero as the wallet's
+     identity surface — and follows the chosen accent with everything else. */
+  box-shadow: inset 0 1px 0 0 rgb(var(--ember-rgb) / 0.28);
 }
 /* The drifting glow. Two offset radial pools, slowly breathing, clipped by the
    card — enough motion to feel alive, too slow to distract. */
@@ -137,8 +154,8 @@ a { color: var(--ember); }
   height: 150%;
   pointer-events: none;
   background:
-    radial-gradient(38% 42% at 25% 30%, rgba(23, 214, 190, 0.18), transparent 70%),
-    radial-gradient(34% 38% at 78% 20%, rgba(62, 230, 209, 0.12), transparent 72%);
+    radial-gradient(38% 42% at 25% 30%, rgb(var(--ember-rgb) / 0.20), transparent 70%),
+    radial-gradient(34% 38% at 78% 20%, color-mix(in srgb, var(--ember-hover) 14%, transparent), transparent 72%);
   filter: blur(6px);
   animation: aurora 14s ease-in-out infinite alternate;
 }
@@ -253,12 +270,12 @@ a { color: var(--ember); }
   padding: 13px 15px;
   border-radius: var(--radius-sm);
   background: var(--ember-soft);
-  border: 1px solid rgba(23, 214, 190, 0.22);
+  border: 1px solid rgb(var(--ember-rgb) / 0.22);
   font-size: 12.5px;
   line-height: 1.5;
   color: var(--ink);
 }
-.privacy-note b { color: var(--ember); font-weight: 600; }
+.privacy-note b { color: var(--ember-text); font-weight: 600; }
 .privacy-note-mark {
   flex: none;
   width: 18px; height: 18px;
@@ -295,7 +312,7 @@ a { color: var(--ember); }
   padding: 3px 10px;
 }
 .conf-pill.done { color: var(--good); background: rgba(53, 196, 106, 0.12); border: 1px solid rgba(53, 196, 106, 0.4); }
-.conf-pill.wait { color: var(--ember); background: var(--ember-soft); border: 1px solid rgba(23, 214, 190, 0.4); }
+.conf-pill.wait { color: var(--ember-text); background: var(--ember-soft); border: 1px solid rgb(var(--ember-rgb) / 0.4); }
 
 /* First-open connecting state: a shield that draws its outline, then ticks a
    checkmark, over the two promises. Reads as "securing", not "waiting". */
@@ -339,9 +356,9 @@ a { color: var(--ember); }
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--ember);
+  color: var(--ember-text);
   background: var(--ember-soft);
-  border: 1px solid rgba(23, 214, 190, 0.22);
+  border: 1px solid rgb(var(--ember-rgb) / 0.22);
   border-radius: 999px;
   padding: 5px 11px;
 }
@@ -383,7 +400,7 @@ a { color: var(--ember); }
   font-size: 32px; font-weight: 700; letter-spacing: -0.02em; color: var(--ink);
   animation: bootload-rise 0.6s 0.1s ease both;
 }
-.bootload-mark span { color: var(--ember); }
+.bootload-mark span { color: var(--ember-text); }
 .bootload-tag {
   font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
   color: var(--muted);
@@ -509,7 +526,7 @@ a { color: var(--ember); }
 .tabs button.active {
   background: var(--ember);
   color: var(--ember-ink);
-  box-shadow: 0 2px 12px rgba(23, 214, 190, 0.35);
+  box-shadow: 0 2px 12px rgb(var(--ember-rgb) / 0.35);
   animation: tab-pop 0.32s cubic-bezier(0.2, 1.5, 0.4, 1);
 }
 @keyframes tab-pop {
@@ -589,13 +606,21 @@ select { appearance: none; cursor: pointer; }
   margin-top: 18px;
   transition: background 0.12s ease, transform 0.08s ease, box-shadow 0.18s ease;
 }
-.btn:hover { background: var(--ember-hover); box-shadow: 0 6px 20px rgba(23, 214, 190, 0.28); }
+.btn:hover { background: var(--ember-hover); box-shadow: 0 6px 20px rgb(var(--ember-rgb) / 0.28); }
 /* A real press: the button dips under the finger, then springs back. Cheap
    tactility that makes the primary action feel physical on tap. */
 .btn:active:not(:disabled) { transform: translateY(1px) scale(0.985); box-shadow: none; }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .btn.ghost { background: transparent; border: 1px solid var(--border); color: var(--ink); box-shadow: none; }
 .btn.ghost:hover { border-color: var(--ember); background: var(--ember-soft); box-shadow: none; }
+/* Destructive confirm ("Remove wallet", "Turn off & erase"): it must NOT read as
+   the teal safe-action primary. A filled danger colour makes the weight of the
+   action legible before the tap. Applied via ConfirmDialog's `danger` prop. */
+.btn.danger { background: var(--bad); color: #fff; }
+.btn.danger:hover { background: color-mix(in srgb, var(--bad) 88%, #000); box-shadow: 0 6px 20px color-mix(in srgb, var(--bad) 35%, transparent); }
+/* In a dialog action row both buttons are `.btn`, whose default 18px top margin
+   double-stacks under the row's own gap. Zero it so the row spaces evenly. */
+.dialog-actions .btn { margin-top: 0; }
 .btn.small { width: auto; padding: 8px 16px; font-size: 13px; margin-top: 0; }
 @media (prefers-reduced-motion: reduce) {
   .btn:active:not(:disabled) { transform: none; }
@@ -671,8 +696,8 @@ select { appearance: none; cursor: pointer; }
   line-height: 1.5;
 }
 .warnbar b { color: var(--ink); }
-.warnbar-icon { flex: none; color: var(--ember); }
-.warnbar a { color: var(--ember); text-decoration: underline; }
+.warnbar-icon { flex: none; color: var(--ember-text); }
+.warnbar a { color: var(--ember-text); text-decoration: underline; }
 
 .wallet-topline {
   display: flex;
@@ -701,7 +726,7 @@ select { appearance: none; cursor: pointer; }
 }
 .connection-button:hover { border-color: var(--ember); background: var(--surface-2); }
 .connection-button > span { display: flex; min-width: 0; flex: 1; flex-direction: column; line-height: 1.1; }
-.connection-button small { margin-bottom: 3px; color: var(--muted); font-size: 9px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.connection-button small { margin-bottom: 3px; color: var(--muted); font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
 .connection-button b { overflow: hidden; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
 .connection-button > svg:last-child { color: var(--muted); }
 .modalcard.connection-modal {
@@ -739,7 +764,7 @@ select { appearance: none; cursor: pointer; }
 .run-on-phone { min-width: 0; display: flex; flex-direction: column; gap: 8px; }
 .run-on-phone > button { width: 100%; }
 .connection-option > span:last-child,
-.connection-option.saved > button:first-child > span:last-child { color: var(--ember); font-size: 11px; font-weight: 700; }
+.connection-option.saved > button:first-child > span:last-child { color: var(--ember-text); font-size: 11px; font-weight: 700; }
 .connection-option.saved { padding: 0; }
 .connection-option.saved > button:first-child { display: flex; min-width: 0; min-height: 56px; flex: 1; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .connection-remove { display: grid; width: 42px; align-self: stretch; place-items: center; border: 0; border-left: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; }
@@ -788,7 +813,7 @@ select { appearance: none; cursor: pointer; }
   cursor: pointer;
   transition: border-color 0.12s ease, color 0.12s ease;
 }
-.inlinebtn:hover { border-color: var(--ember); color: var(--ember); }
+.inlinebtn:hover { border-color: var(--ember); color: var(--ember-text); }
 
 /* Label row with a trailing text action (e.g. "Amount" + a Max button). Carries
    the label's normal top spacing so the inline label can zero its own margin. */
@@ -802,7 +827,7 @@ select { appearance: none; cursor: pointer; }
   background: none;
   border: none;
   padding: 0;
-  color: var(--ember);
+  color: var(--ember-text);
   font-size: 13px;
   font-weight: 600;
   font-family: inherit;
@@ -986,9 +1011,9 @@ select { appearance: none; cursor: pointer; }
   border-radius: 999px;
   padding: 3px 9px;
 }
-.txrow-badge.pending { color: var(--ember); border: 1px solid rgba(23, 214, 190, 0.45); background: rgba(23, 214, 190, 0.1); }
+.txrow-badge.pending { color: var(--ember-text); border: 1px solid rgb(var(--ember-rgb) / 0.45); background: rgb(var(--ember-rgb) / 0.1); }
 .txrow-badge.done { color: var(--good); border: 1px solid rgba(53, 196, 106, 0.4); background: rgba(53, 196, 106, 0.1); }
-.txrow-badge.recv { color: var(--accent); border: 1px solid rgba(23, 214, 190, 0.35); background: rgba(23, 214, 190, 0.08); }
+.txrow-badge.recv { color: var(--ember-text); border: 1px solid rgb(var(--ember-rgb) / 0.35); background: rgb(var(--ember-rgb) / 0.08); }
 .txrow-sub .memo { font-style: italic; opacity: 0.85; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60vw; }
 .txrow-sub {
   display: flex;
@@ -1066,7 +1091,7 @@ select { appearance: none; cursor: pointer; }
 
 /* --- Warm-up (one-time send speed-up) --------------------------------------- */
 
-.warmtag { color: var(--ember); }
+.warmtag { color: var(--ember-text); }
 .warmnote {
   margin-top: 8px;
   font-size: 12px;
@@ -1239,7 +1264,7 @@ select { appearance: none; cursor: pointer; }
   transition: all 0.25s ease;
 }
 .ss-step.on { color: var(--ember-ink); background: var(--ember); border-color: var(--ember); }
-.ss-step.done { color: var(--ember); border-color: rgba(23, 214, 190, 0.4); }
+.ss-step.done { color: var(--ember-text); border-color: rgb(var(--ember-rgb) / 0.4); }
 .sendscene-cap {
   font-size: 12.5px;
   color: var(--muted);
@@ -1263,7 +1288,7 @@ select { appearance: none; cursor: pointer; }
   min-height: 0;
   margin-top: 6px;
   font-size: 12px;
-  color: var(--ember);
+  color: var(--ember-text);
   opacity: 0.9;
 }
 @media (prefers-reduced-motion: reduce) {
@@ -1648,7 +1673,7 @@ select { appearance: none; cursor: pointer; }
 .qa-receive {
   background: var(--ember);
   color: var(--ember-ink);
-  box-shadow: 0 4px 18px rgba(23, 214, 190, 0.28);
+  box-shadow: 0 4px 18px rgb(var(--ember-rgb) / 0.28);
 }
 .qa-receive:hover { filter: brightness(1.06); }
 .qa-send {
@@ -1753,7 +1778,7 @@ select { appearance: none; cursor: pointer; }
   letter-spacing: .11em;
   cursor: pointer;
 }
-.app-wordmark span { color: var(--ember); }
+.app-wordmark span { color: var(--ember-text); }
 .app-page-links {
   display: flex;
   min-width: 0;
@@ -1838,7 +1863,7 @@ select { appearance: none; cursor: pointer; }
   }
   .app-page-links > button.active {
     background: var(--ember-soft);
-    color: var(--ember);
+    color: var(--ember-text);
   }
   .app-page-links > button svg { margin-right: 11px; }
   .app-shell-content { margin-left: 216px; }
@@ -1886,7 +1911,7 @@ select { appearance: none; cursor: pointer; }
 .control-heading { margin-bottom: 18px; }
 .control-heading h1 { margin: 3px 0 5px; font-size: clamp(25px, 4vw, 34px); letter-spacing: -.035em; }
 .control-heading p, .control-card p { margin: 0; color: var(--muted); line-height: 1.5; }
-.eyebrow { color: var(--ember); font-size: 11px; font-weight: 750; letter-spacing: .14em; text-transform: uppercase; }
+.eyebrow { color: var(--ember-text); font-size: 11px; font-weight: 750; letter-spacing: .14em; text-transform: uppercase; }
 .control-card {
   margin: 12px 0 0;
   padding: 20px;
@@ -1930,7 +1955,7 @@ select { appearance: none; cursor: pointer; }
 .check-row span { display: flex; flex-direction: column; gap: 2px; }
 .check-row small { color: var(--muted); line-height: 1.4; }
 .btn.compact { min-height: 36px; padding: 8px 12px; font-size: 12px; }
-.text-button { padding: 3px; border: 0; background: none; color: var(--ember); font: 650 12px var(--sans); cursor: pointer; }
+.text-button { padding: 3px; border: 0; background: none; color: var(--ember-text); font: 650 12px var(--sans); cursor: pointer; }
 .log-view { max-height: 330px; overflow: auto; padding: 12px; border-radius: var(--radius-sm); background: #07070a; color: #d8d8df; font: 11px/1.5 var(--mono); }
 .log-view div { overflow-wrap: anywhere; }
 .log-view div > span { color: #858596; }
@@ -1976,7 +2001,7 @@ select { appearance: none; cursor: pointer; }
 .node-mode-option strong { font-size: 14px; }
 .node-mode-option small { color: var(--muted); font-size: 11px; line-height: 1.4; }
 .node-mode-icon { display: grid; width: 40px; height: 40px; place-items: center; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--muted); }
-.node-mode-option.selected .node-mode-icon { border-color: color-mix(in srgb, var(--ember) 55%, var(--border)); color: var(--ember); }
+.node-mode-option.selected .node-mode-icon { border-color: color-mix(in srgb, var(--ember) 55%, var(--border)); color: var(--ember-text); }
 .node-mode-option > i { width: 16px; height: 16px; border: 1px solid var(--muted); border-radius: 50%; box-shadow: inset 0 0 0 4px var(--surface-2); background: transparent; }
 .node-mode-option.selected > i { border-color: var(--ember); background: var(--ember); box-shadow: inset 0 0 0 4px color-mix(in srgb, var(--surface) 86%, var(--ember) 14%); }
 .node-public-toggle { margin: 13px 18px; padding: 11px 12px; border: 1px solid var(--border); border-radius: 10px; background: color-mix(in srgb, var(--surface-2) 76%, transparent); }
@@ -2006,7 +2031,7 @@ select { appearance: none; cursor: pointer; }
 .nested-settings { margin-top: 15px; padding: 15px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: color-mix(in srgb, var(--surface-2) 72%, transparent); }
 .nested-settings .field-label:first-child { margin-top: 0; }
 .asic-card ol { margin: 14px 0; padding-left: 22px; line-height: 2; }
-.asic-card code, .asic-inline code { overflow-wrap: anywhere; color: var(--ember); font-family: var(--mono); }
+.asic-card code, .asic-inline code { overflow-wrap: anywhere; color: var(--ember-text); font-family: var(--mono); }
 .asic-inline { display: flex; flex-direction: column; gap: 6px; margin: 15px 0; padding: 13px; border-radius: var(--radius-sm); background: var(--surface-2); }
 .asic-inline span { color: var(--muted); font-size: 12px; }
 .address-line { overflow-wrap: anywhere; }
@@ -2027,7 +2052,7 @@ select { appearance: none; cursor: pointer; }
 .mining-setup-card > .card-title-row { padding: 19px 20px 17px; }
 .setup-section { padding: 17px 20px 19px; border-top: 1px solid var(--border); }
 .setup-section-title { display: flex; align-items: center; gap: 10px; }
-.setup-section-title > span { display: grid; width: 25px; height: 25px; place-items: center; border-radius: 50%; background: var(--ember-soft); color: var(--ember); font-size: 11px; font-weight: 800; }
+.setup-section-title > span { display: grid; width: 25px; height: 25px; place-items: center; border-radius: 50%; background: var(--ember-soft); color: var(--ember-text); font-size: 11px; font-weight: 800; }
 .setup-section-title > div { display: flex; flex-direction: column; gap: 2px; }
 .setup-section-title b { font-size: 14px; }
 .setup-section-title small { color: var(--muted); font-size: 11px; }
@@ -2050,11 +2075,11 @@ select { appearance: none; cursor: pointer; }
 .endpoint-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; margin: 17px 0 12px; }
 .endpoint-card { min-width: 0; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-2); }
 .endpoint-title { display: flex; min-width: 0; align-items: center; gap: 8px; }
-.endpoint-title > svg { flex: none; color: var(--ember); }
+.endpoint-title > svg { flex: none; color: var(--ember-text); }
 .endpoint-title > span { display: flex; min-width: 0; flex-direction: column; gap: 2px; }
 .endpoint-title b { font-size: 12px; }
 .endpoint-title small { overflow: hidden; color: var(--muted); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
-.endpoint-card > button { display: flex; width: 100%; min-width: 0; min-height: 35px; align-items: center; justify-content: space-between; gap: 7px; margin-top: 10px; padding: 7px 8px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--ember); cursor: pointer; }
+.endpoint-card > button { display: flex; width: 100%; min-width: 0; min-height: 35px; align-items: center; justify-content: space-between; gap: 7px; margin-top: 10px; padding: 7px 8px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--ember-text); cursor: pointer; }
 .endpoint-card > button code { min-width: 0; overflow: hidden; font: 10px var(--mono); text-overflow: ellipsis; white-space: nowrap; }
 .endpoint-card > button svg { flex: none; }
 .endpoint-unavailable { display: block; margin-top: 14px; color: var(--muted); font-size: 11px; }
@@ -2101,7 +2126,7 @@ select { appearance: none; cursor: pointer; }
 .explorer-columns aside { min-width: 0; }
 .explorer-list { margin-top: 12px; border-top: 1px solid var(--border); }
 .explorer-list button { display: flex; width: 100%; justify-content: space-between; align-items: center; gap: 12px; min-height: 55px; padding: 9px 2px; border: 0; border-bottom: 1px solid var(--border); background: none; color: var(--ink); text-align: left; font: inherit; cursor: pointer; }
-.explorer-list button:hover { color: var(--ember); }
+.explorer-list button:hover { color: var(--ember-text); }
 .explorer-list button > span { display: flex; min-width: 0; flex-direction: column; gap: 4px; }
 .explorer-list button > span:last-child { align-items: flex-end; text-align: right; }
 .explorer-list small { color: var(--muted); }
@@ -2111,7 +2136,7 @@ select { appearance: none; cursor: pointer; }
 .explorer-detail-heading { margin-top: 0; }
 .explorer-full-id { max-width: min(760px, 82vw); overflow-wrap: anywhere; font-size: 11px; }
 .privacy-explainer { border-color: color-mix(in srgb, var(--ember) 42%, var(--border)); }
-.privacy-explainer h2::before { content: "◈"; margin-right: 8px; color: var(--ember); }
+.privacy-explainer h2::before { content: "◈"; margin-right: 8px; color: var(--ember-text); }
 
 /* Services --------------------------------------------------------------- */
 .services-theme {
@@ -2138,7 +2163,7 @@ select { appearance: none; cursor: pointer; }
   border-color: color-mix(in srgb, var(--border) 85%, transparent);
   background: color-mix(in srgb, var(--bg) 90%, transparent);
 }
-.services-theme .status-pill.good { color: var(--ember); border-color: color-mix(in srgb, var(--ember) 45%, var(--border)); }
+.services-theme .status-pill.good { color: var(--ember-text); border-color: color-mix(in srgb, var(--ember) 45%, var(--border)); }
 .services-page { width: min(1080px, calc(100% - 28px)); }
 .services-controls { margin-bottom: 18px; }
 .services-filters { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
@@ -2155,7 +2180,7 @@ select { appearance: none; cursor: pointer; }
 .services-theme .service-card:hover { background: linear-gradient(150deg, rgba(20, 39, 34, .98), rgba(10, 20, 17, .98)); }
 .service-card h2 { margin: 17px 0 7px; font-size: 18px; }
 .service-card p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
-.service-icon { display: grid; width: 42px; height: 42px; flex: none; place-items: center; border: 1px solid color-mix(in srgb, var(--ember) 35%, var(--border)); border-radius: 12px; background: rgba(6, 15, 12, .66); color: var(--ember); }
+.service-icon { display: grid; width: 42px; height: 42px; flex: none; place-items: center; border: 1px solid color-mix(in srgb, var(--ember) 35%, var(--border)); border-radius: 12px; background: rgba(6, 15, 12, .66); color: var(--ember-text); }
 .service-meta { display: flex; min-width: 0; align-items: flex-end; flex-direction: column; gap: 5px; }
 .service-status { color: var(--muted); font-size: 10px; font-weight: 750; letter-spacing: .09em; text-transform: uppercase; }
 .service-status::before { content: ""; display: inline-block; width: 6px; height: 6px; margin-right: 6px; border-radius: 50%; background: #e3ac42; }
@@ -2166,10 +2191,10 @@ select { appearance: none; cursor: pointer; }
 .service-tags { display: flex; flex-wrap: wrap; gap: 5px; margin: 13px 0; }
 .service-tags span { padding: 5px 7px; border: 1px solid var(--border); border-radius: 7px; color: var(--muted); font: 10px var(--mono); letter-spacing: .035em; text-transform: uppercase; }
 .service-action { display: flex; width: 100%; justify-content: space-between; margin-top: auto; padding: 11px 0 0; border: 0; border-top: 1px solid var(--border); background: none; color: var(--ink); font: 650 13px var(--sans); cursor: pointer; }
-.service-action:hover { color: var(--ember); }
+.service-action:hover { color: var(--ember-text); }
 .service-secondary { display: flex; flex-wrap: wrap; gap: 5px 10px; margin-top: 10px; }
 .service-secondary a { color: var(--muted); font-size: 10px; text-decoration: none; }
-.service-secondary a:hover { color: var(--ember); }
+.service-secondary a:hover { color: var(--ember-text); }
 
 /* Payment tools ---------------------------------------------------------- */
 .tool-tabs { margin-bottom: 12px; }
@@ -2182,7 +2207,7 @@ select { appearance: none; cursor: pointer; }
 .tx-label-editor { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 7px; align-items: center; }
 .tx-label-editor input { min-width: 0; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--ink); padding: 8px 10px; }
 .tx-label-editor small { grid-column: 1 / -1; color: var(--muted); text-align: right; }
-.txrow-label { margin-top: 5px; color: var(--ember); font-size: 12px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.txrow-label { margin-top: 5px; color: var(--ember-text); font-size: 12px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* Self-host -------------------------------------------------------------- */
 /* Host is a status board, not an article: three service cards forced into a 2-column
@@ -2237,7 +2262,7 @@ select { appearance: none; cursor: pointer; }
   .app-shell:not(.desktop-shell) .app-page-links > button { display: flex; min-width: 0; min-height: 52px; flex: 1; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 5px 2px; border-radius: 11px; font-size: 10px; }
   .app-shell:not(.desktop-shell) .app-page-links > button svg { width: 18px; height: 18px; margin: 0; }
   .app-shell:not(.desktop-shell) .app-nav-label { font-size: 10px; line-height: 1; }
-  .app-shell:not(.desktop-shell) .app-page-links > button.active { background: var(--ember-soft); color: var(--ember); }
+  .app-shell:not(.desktop-shell) .app-page-links > button.active { background: var(--ember-soft); color: var(--ember-text); }
   .app-shell:not(.desktop-shell) .tabs { top: calc(8px + env(safe-area-inset-top)); }
   .control-page { width: min(100% - 20px, 820px); padding-top: 20px; }
   .app-shell:not(.desktop-shell) .control-page { padding-top: calc(20px + env(safe-area-inset-top)); }
