@@ -4462,8 +4462,11 @@ function RescanButton({ label, hint, daaScore }: { label: string; hint: string; 
 /// Request a specific amount: builds a `zkas:addr?amount=…&memo=…` payment link +
 /// QR that the payer's Send screen auto-fills (parsePaymentUri consumes it). The
 /// amount and note are a REQUEST — the payer can still change them.
+/// Request a specific amount: builds a `zkas:addr?amount=…&memo=…` payment link +
+/// QR that the payer's Send screen auto-fills (parsePaymentUri consumes it). The
+/// amount and note are a REQUEST — the payer can still change them. Rendered as a
+/// panel inside Receive's segmented toggle (no self-managed open state).
 function RequestAmount({ address }: { address: string }) {
-  const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState("");
   const [memo, setMemo] = useState("");
   const [qr, setQr] = useState("");
@@ -4476,44 +4479,49 @@ function RequestAmount({ address }: { address: string }) {
     return qs ? `${address}?${qs}` : address;
   }, [address, amount, memo]);
   useEffect(() => {
-    if (!open || !amount.trim()) return;
+    if (!amount.trim()) return;
     QRCode.toDataURL(uri, { margin: 1, width: 440 }).then(setQr).catch(() => {});
-  }, [uri, open, amount]);
+  }, [uri, amount]);
   const copy = async () => {
     await copyText(uri);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   };
-  if (!open) {
-    return (
-      <button type="button" className="linkbtn" style={{ marginTop: 16 }} onClick={() => setOpen(true)}>
-        Request a specific amount
-      </button>
-    );
-  }
+  const ready = !!amount.trim() && !!qr;
   return (
     <div className="request-amount">
       <label>Amount to request</label>
       <input value={amount} onChange={(e) => setAmount(sanitizeAmountInput(e.target.value))} placeholder="0.00" inputMode="decimal" autoFocus />
       <label>What it's for (optional)</label>
       <input value={memo} onChange={(e) => setMemo(e.target.value.slice(0, 400))} placeholder="Invoice 1042" maxLength={400} />
-      {qr && amount.trim() && (
-        <div className="qr" style={{ margin: "14px 0 0" }}>
-          <img src={qr} alt="payment request QR" style={{ width: 200, height: 200 }} />
+
+      <div className={"qr-vault" + (ready ? "" : " empty")}>
+        <span className="qr-aura" aria-hidden="true" />
+        <div className="qr-frame">
+          <span className="qr-corner tl" aria-hidden="true" />
+          <span className="qr-corner tr" aria-hidden="true" />
+          <span className="qr-corner bl" aria-hidden="true" />
+          <span className="qr-corner br" aria-hidden="true" />
+          {ready
+            ? <img src={qr} alt="payment request QR" onClick={copy} style={{ cursor: "pointer" }} />
+            : <span className="qr-await" aria-hidden="true"><span className="shield-chip-mark" />Enter an amount</span>}
         </div>
-      )}
-      <div className="row" style={{ marginTop: 12 }}>
-        <button className={"btn copybtn" + (copied ? " copied" : "")} disabled={!amount.trim()} onClick={copy}>
+        {ready && (
+          <span className="shield-chip" aria-hidden="true"><span className="shield-chip-mark" />Shielded request</span>
+        )}
+      </div>
+
+      <div className="row" style={{ marginTop: 14 }}>
+        <button className={"btn copybtn" + (copied ? " copied" : "")} disabled={!ready} onClick={copy}>
           {copied ? "Copied ✓" : "Copy payment link"}
         </button>
         {typeof navigator !== "undefined" && typeof navigator.share === "function" && (
-          <button className="btn ghost" disabled={!amount.trim()} onClick={() => { void navigator.share({ text: uri }).catch(() => {}); }}>
+          <button className="btn ghost" disabled={!ready} onClick={() => { void navigator.share({ text: uri }).catch(() => {}); }}>
             Share
           </button>
         )}
       </div>
       <div className="fieldhint muted">The payer's wallet fills in the amount and note — they can still change them.</div>
-      <button type="button" className="linkbtn" style={{ marginTop: 8 }} onClick={() => setOpen(false)}>Done</button>
     </div>
   );
 }
@@ -4524,6 +4532,7 @@ function Receive({ status }: { status: Status }) {
   // instantly on every later open — no beat where the card has a QR-shaped hole.
   const [qr, setQr] = useState(() => (addr && localStorage.getItem("qr_" + addr)) || "");
   const [copied, setCopied] = useState(false);
+  const [mode, setMode] = useState<"address" | "request">("address");
   useEffect(() => {
     if (!addr) return; // never blank an already-rendered QR on a transient empty poll
     const cached = localStorage.getItem("qr_" + addr);
@@ -4550,36 +4559,54 @@ function Receive({ status }: { status: Status }) {
   return (
     <div className="card">
       <h2>Receive</h2>
-      <p className="muted small" style={{ marginTop: 0 }}>
-        Share this address or QR to receive ZKAS. Every payment to it is private.
-      </p>
-      <div className="qr qr-shield">
-        {qr && <img src={qr} alt="address QR" onClick={copy} style={{ cursor: "pointer" }} />}
-      </div>
-      <label>Your shielded address</label>
-      <div className="addr" onClick={copy} style={{ cursor: "pointer" }} title="Tap to copy">
-        {addr}
-      </div>
-      <div className="row" style={{ marginTop: 12 }}>
-        <button className={"btn copybtn" + (copied ? " copied" : "")} onClick={copy}>
-          {copied ? "Copied ✓" : "Copy address"}
+
+      <div className="rcv-toggle" role="tablist" aria-label="Receive mode">
+        <button type="button" role="tab" aria-selected={mode === "address"} className={"rcv-seg" + (mode === "address" ? " on" : "")} onClick={() => setMode("address")}>
+          Address
         </button>
-        {typeof navigator !== "undefined" && typeof navigator.share === "function" && (
-          <button className="btn ghost" onClick={() => { void navigator.share({ text: addr }).catch(() => {}); }}>
-            Share
-          </button>
-        )}
+        <button type="button" role="tab" aria-selected={mode === "request"} className={"rcv-seg" + (mode === "request" ? " on" : "")} onClick={() => setMode("request")}>
+          Request amount
+        </button>
+        <span className="rcv-seg-ind" data-mode={mode} aria-hidden="true" />
       </div>
 
-      <RequestAmount address={addr} />
+      {mode === "address" ? (
+        <>
+          <div className="qr-vault">
+            <span className="qr-aura" aria-hidden="true" />
+            <div className="qr-frame">
+              <span className="qr-corner tl" aria-hidden="true" />
+              <span className="qr-corner tr" aria-hidden="true" />
+              <span className="qr-corner bl" aria-hidden="true" />
+              <span className="qr-corner br" aria-hidden="true" />
+              {qr && <img src={qr} alt="address QR" onClick={copy} style={{ cursor: "pointer" }} />}
+            </div>
+            <span className="shield-chip" aria-hidden="true"><span className="shield-chip-mark" />Shielded</span>
+          </div>
 
-      <div className="privacy-note">
-        <span className="privacy-note-mark" aria-hidden="true" />
-        <span>
-          <b>Nobody can see this coming.</b> Amounts, sender and recipient are sealed by zero-knowledge proofs — the
-          chain records that a valid payment happened, never who paid what to whom.
-        </span>
-      </div>
+          <label>Your shielded address</label>
+          <div className="addr" onClick={copy} style={{ cursor: "pointer" }} title="Tap to copy">
+            {addr}
+          </div>
+          <div className="row" style={{ marginTop: 12 }}>
+            <button className={"btn copybtn" + (copied ? " copied" : "")} onClick={copy}>
+              {copied ? "Copied ✓" : "Copy address"}
+            </button>
+            {typeof navigator !== "undefined" && typeof navigator.share === "function" && (
+              <button className="btn ghost" onClick={() => { void navigator.share({ text: addr }).catch(() => {}); }}>
+                Share
+              </button>
+            )}
+          </div>
+
+          <div className="privacy-terse" role="note">
+            <span className="privacy-terse-mark" aria-hidden="true" />
+            Amounts, sender, recipient — sealed.
+          </div>
+        </>
+      ) : (
+        <RequestAmount address={addr} />
+      )}
 
       <RescanButton label="Payment not showing up?" hint="Re-read the chain for this wallet — recovers anything the local view is missing." daaScore={status?.daa_score} />
 
