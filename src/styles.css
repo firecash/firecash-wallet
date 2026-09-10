@@ -1001,7 +1001,11 @@ select { appearance: none; cursor: pointer; }
   .txrow:hover { transform: none; box-shadow: none; }
 }
 .txrow-main { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.txrow-amt { font-weight: 600; font-size: 14px; }
+.txrow-amt { font-weight: 600; font-size: 14px; font-variant-numeric: tabular-nums; }
+/* Direction reads at a glance from color: money in is the accent-independent
+   "good" green, money out stays neutral ink (never alarm-red — a send is normal). */
+.txrow-amt.pos { color: var(--good); }
+.txrow-amt.neg { color: var(--ink); }
 .txrow-badge {
   flex: none;
   font-size: 11px;

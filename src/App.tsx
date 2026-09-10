@@ -3946,7 +3946,7 @@ function StopWatching() {
           </div>
           <div className="row" style={{ gap: 8 }}>
             <button
-              className="btn"
+              className="btn danger"
               onClick={() => {
                 clearWatchKey();
                 const token = localStorage.getItem("wallet_token");
@@ -4492,9 +4492,16 @@ function Receive({ status }: { status: Status }) {
       <div className="addr" onClick={copy} style={{ cursor: "pointer" }} title="Tap to copy">
         {addr}
       </div>
-      <button className={"btn ghost small copybtn" + (copied ? " copied" : "")} style={{ marginTop: 12 }} onClick={copy}>
-        {copied ? "Copied ✓" : "Copy address"}
-      </button>
+      <div className="row" style={{ marginTop: 12 }}>
+        <button className={"btn copybtn" + (copied ? " copied" : "")} onClick={copy}>
+          {copied ? "Copied ✓" : "Copy address"}
+        </button>
+        {typeof navigator !== "undefined" && typeof navigator.share === "function" && (
+          <button className="btn ghost" onClick={() => { void navigator.share({ text: addr }).catch(() => {}); }}>
+            Share
+          </button>
+        )}
+      </div>
 
       <div className="privacy-note">
         <span className="privacy-note-mark" aria-hidden="true" />
@@ -4845,6 +4852,9 @@ function Send({
   // minimum — so this can only speed a send up, never break it.
   const [showFeeCfg, setShowFeeCfg] = useState(false);
   const [customFee, setCustomFee] = useState("");
+  // Most payments carry no memo, so the field starts collapsed behind a link and
+  // only takes room when there's something to say (or a payment request prefilled one).
+  const [showMemo, setShowMemo] = useState(!!initialRequest?.memo);
 
   // The confirm step is a fresh screen — align it under the tab bar so the
   // details are what the user sees, not the page header.
@@ -5316,16 +5326,25 @@ function Send({
         </div>
       )}
 
-      <label>Private note (optional)</label>
-      <input
-        value={memo}
-        onChange={(e) => setMemo(e.target.value.slice(0, 400))}
-        placeholder="What is this payment for?"
-        maxLength={400}
-      />
-      <div className="fieldhint">
-        Sealed inside the recipient's encrypted note — only they can read it. Never appears on-chain or on the explorer.
-      </div>
+      {!showMemo ? (
+        <button type="button" className="linkbtn" style={{ marginTop: 14 }} onClick={() => setShowMemo(true)}>
+          + Add a private note
+        </button>
+      ) : (
+        <>
+          <label>Private note (optional)</label>
+          <input
+            value={memo}
+            onChange={(e) => setMemo(e.target.value.slice(0, 400))}
+            placeholder="What is this payment for?"
+            maxLength={400}
+            autoFocus
+          />
+          <div className="fieldhint">
+            Sealed inside the recipient's encrypted note — only they can read it. Never appears on-chain or on the explorer.
+          </div>
+        </>
+      )}
       {overspend && blockedByMaturing && (
         <div className="fieldhint bad">
           Only {trimFc(spendable.toFixed(8))} is ready to spend right now — {trimFc(maturing.toFixed(8))} is still
@@ -5770,7 +5789,7 @@ function History({
               return (
                 <div key={`rcpt-${r.ts}-${ri}`} className="txrow" aria-label="Received">
                   <div className="txrow-main">
-                    <span className="txrow-amt">+ {trimFc(r.amountFc.toFixed(8))} ZKAS</span>
+                    <span className="txrow-amt pos">+ {trimFc(r.amountFc.toFixed(8))} ZKAS</span>
                     <span className="txrow-badge recv">received</span>
                   </div>
                   <div className="txrow-sub">
@@ -5791,7 +5810,7 @@ function History({
                   onClick={() => setDetail(localTxToRow(t))}
                 >
                   <div className="txrow-main">
-                    <span className="txrow-amt">− {trimFc(t.amountFc.toFixed(8))} ZKAS</span>
+                    <span className="txrow-amt neg">− {trimFc(t.amountFc.toFixed(8))} ZKAS</span>
                     <span className={"txrow-badge " + ((t.confs ?? 0) >= 1 ? "done" : "pending")}>{confBadge(t)}</span>
                   </div>
                   <div className="txrow-sub">
@@ -5816,7 +5835,7 @@ function History({
                 onClick={() => setDetail(r)}
               >
                 <div className="txrow-main">
-                  <span className="txrow-amt">
+                  <span className={"txrow-amt " + (r.kind === "sent" ? "neg" : "pos")}>
                     {r.kind === "sent" ? "− " : "+ "}
                     {/* A consolidation moves value to yourself, so what actually LEFT
                         the wallet is the fee, not the merged total. A normal send shows
