@@ -3803,7 +3803,7 @@ function AccessTokenSetting() {
   return (
     <label className="row" style={{ gap: 10, alignItems: "flex-start", cursor: "pointer" }}>
       <input type="checkbox" checked={on} style={{ marginTop: 3 }} onChange={(e) => { setShowAccessTokenField(e.target.checked); setOn(e.target.checked); }} />
-      <span><b>Show access-token field</b><br /><span className="muted small">Adds a token box to wallet-service setup. Only needed for a token-protected walletd.</span></span>
+      <span><b>Show access-token field</b><br /><span className="muted small">Adds a token box to wallet-server setup. Only needed for a token-protected wallet server.</span></span>
     </label>
   );
 }
@@ -4011,17 +4011,19 @@ function SettingsPane({ status }: { status: Status }) {
       </Collapsible>
       <Collapsible title="Background sync">
         <BackgroundSyncCard />
-        <DebugLogsCard />
       </Collapsible>
       <Collapsible title="Automatic consolidation" summary={isMaintenanceEnabled() ? "On" : "Off"}>
         <AutoConsolidationCard />
       </Collapsible>
       <Collapsible title="Network privacy" summary={networkPrivacyLabel()}>
         <NetworkPrivacyCard />
-        <Collapsible title="Access-token field" summary={showAccessTokenField() ? "Shown" : "Hidden"}>
-          <AccessTokenSetting />
-        </Collapsible>
       </Collapsible>
+      <Collapsible title="Access-token field" summary={showAccessTokenField() ? "Shown" : "Hidden"}>
+        <AccessTokenSetting />
+      </Collapsible>
+      {/* Renders its own "Debug logs" Collapsible; kept top-level rather than buried
+          inside Background sync. Returns null when there's no on-device engine. */}
+      <DebugLogsCard />
       {!ROOMY() && (
         <Collapsible title="Signatures">
           <Signatures status={status} />
@@ -6222,7 +6224,7 @@ function DebugLogsCard() {
       <div className="stack">
         <label className="row" style={{ gap: 10, alignItems: "flex-start", cursor: "pointer" }}>
           <input type="checkbox" checked={on} style={{ marginTop: 3 }} onChange={(e) => void toggle(e.target.checked)} />
-          <span><b>Verbose engine logs</b><br /><span className="muted small">More detail from the on-device engine. Turn on when a wallet is stuck opening or a send fails, then Show logs.</span></span>
+          <span><b>Verbose engine logs</b><br /><span className="muted small">More detail from the on-device engine. Turn on when a wallet is stuck opening or a send fails, then Show engine logs.</span></span>
         </label>
         <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
           <button className="btn small" onClick={() => void show()}>Show engine logs</button>
